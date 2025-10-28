@@ -13,7 +13,7 @@ public sealed class CommandProcessor
         _persistence = persistence; 
     }
 
-    public string Process(string line) // takes the line that's passed through and checks the command input given, then switches by command
+    public string Process(string line)
     {
         var parts = ArgSplitter.Split(line);
         if (parts.Count == 0) 
@@ -37,7 +37,7 @@ public sealed class CommandProcessor
         };
     }
 
-    private string DoSet(IReadOnlyList<string> parts) // sets key value pair in store
+    private string DoSet(IReadOnlyList<string> parts)
     {
         if (parts.Count < 3) 
             return "(error) SET key value [EX seconds]";
@@ -52,21 +52,21 @@ public sealed class CommandProcessor
         return "OK";
     }
 
-    private string DoGet(IReadOnlyList<string> parts) // retrieves value by key from store
+    private string DoGet(IReadOnlyList<string> parts)
     {
         if (parts.Count < 2) 
             return "(error) GET key";
         return _store.TryGet(parts[1], out var val) ? val! : "(nil)";
     }
 
-    private string DoDel(IReadOnlyList<string> parts) // deletes value by key 
+    private string DoDel(IReadOnlyList<string> parts)
     {
         if (parts.Count < 2) 
             return "(error) DEL key";
         return _store.Del(parts[1]) ? "(integer) 1" : "(integer) 0";
     }
 
-    private string DoExpire(IReadOnlyList<string> parts) // expires key
+    private string DoExpire(IReadOnlyList<string> parts)
     {
         if (parts.Count < 3) 
             return "(error) EXPIRE key seconds";
@@ -75,20 +75,20 @@ public sealed class CommandProcessor
         return _store.Expire(parts[1], TimeSpan.FromSeconds(s)) ? "(integer) 1" : "(integer) 0";
     }
      
-    private string DoTtl(IReadOnlyList<string> parts) // returns remaining seconds to live for a key
+    private string DoTtl(IReadOnlyList<string> parts)
     {
         if (parts.Count < 2) 
             return "(error) TTL key";
         var ttl = _store.Ttl(parts[1]);
         return ttl switch
         {
-            null => "(integer) -2", // no such key
-            TimeSpan t when t == TimeSpan.MaxValue => "(integer) -1", // no expire
+            null => "(integer) -2",
+            TimeSpan t when t == TimeSpan.MaxValue => "(integer) -1",
             TimeSpan t => $"(integer) {(int)Math.Ceiling(t.TotalSeconds)}"
         };
     }
 
-    private string DoIncr(IReadOnlyList<string> parts) // Incremets a given integer value through key
+    private string DoIncr(IReadOnlyList<string> parts)
     {
         if (parts.Count < 2) 
             return "(error) INCR key";
@@ -96,14 +96,13 @@ public sealed class CommandProcessor
         return result.IsError ? result.ErrorMessage! : $"(integer) {result.Value}";
     }
 
-    private string DoKeys() => _store.Keys().Any() ? string.Join(' ', _store.Keys()) : "(empty)"; // Returns all keys
+    private string DoKeys() => _store.Keys().Any() ? string.Join(' ', _store.Keys()) : "(empty)";
 
-    private string DoFlushAll() // Clears the store
+    private string DoFlushAll()
     { 
         _store.Clear(); 
         return "OK"; 
     }
 
     private string DoSave() => _persistence.TrySave(_store.Snapshot()) is { } n ? $"Saved {n} keys" : "(error) save failed";
-    // ^ writes current keys to JSON file through persistence
 }

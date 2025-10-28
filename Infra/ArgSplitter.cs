@@ -2,7 +2,6 @@ namespace MiniRedis.Infra;
 
 public static class ArgSplitter
 {
-    // Used by CommandProcessor.cs to parse data
     public static List<string> Split(string input)
     {
         var result = new List<string>();

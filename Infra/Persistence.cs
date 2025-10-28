@@ -5,7 +5,6 @@ namespace MiniRedis.Infra;
 
 public sealed class Persistence(string path)
 {
-    // Used by Program.cs when loading and CommandProcessor.cs when saving
     private readonly string _path = path;
 
     public int? TrySave(IReadOnlyDictionary<string, CacheItem> snapshot)

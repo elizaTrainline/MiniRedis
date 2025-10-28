@@ -8,10 +8,8 @@ public sealed class KeyValueStore
 
     public int Count => _map.Count;
 
-    // Puts/replaces the value:
     public void Set(string key, string value, DateTimeOffset? expiryUtc) => _map[key] = new CacheItem(value, expiryUtc);
 
-    // Tries to retrieve the value by the key:
     public bool TryGet(string key, out string? value)
     {
         value = null;
@@ -26,10 +24,8 @@ public sealed class KeyValueStore
         return true;
     }
 
-    // Deletes the key:
     public bool Del(string key) => _map.TryRemove(key, out _);
 
-    // If the key does not have relevant data then sets the key to expire now so it can be autocleaned up:
     public bool Expire(string key, TimeSpan ttl)
     {
         if (!_map.TryGetValue(key, out var item)) return false;
@@ -61,17 +57,13 @@ public sealed class KeyValueStore
         return IncrResult.Success(long.Parse(nowItem.Value));
     }
 
-    // Exposes all current dictionary keys:
     public IEnumerable<string> Keys() => _map.Keys;
 
-    // Clears the dictionary::
     public void Clear() => _map.Clear();
 
-    // Returns non-expired items for saving to disk:
     public IReadOnlyDictionary<string, CacheItem> Snapshot() => 
         _map.Where(kv => !kv.Value.IsExpired).ToDictionary(kv => kv.Key, kv => kv.Value);
 
-    // Cleans up any expired items:
     public CancellationTokenSource StartSweeper(TimeSpan period)
     {
         var cts = new CancellationTokenSource();
